@@ -23,4 +23,11 @@ app.get("/host", (_, res) => {
   res.send(os.hostname());
 });
 
+app.get("/cpu", (req, res) => {
+  for (let i = 0; i < 10000000000; i++) {
+    Math.random();
+  }
+  res.send("Hello World");
+});
+
 export default app;
