@@ -21,29 +21,33 @@ const requestDurationHistogram = new client.Histogram({
 });
 
 const metricsMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  const route = req.route?.path || req.path;
   const startDate = Date.now();
 
-  activeRequestsGauge.inc({ route: req.originalUrl, method: req.method });
+  activeRequestsGauge.inc({ route, method: req.method });
 
   res.on("finish", () => {
     const duration = Date.now() - startDate;
 
     requestCounter.inc({
+      route,
       method: req.method,
-      route: req.originalUrl,
-      status_code: res.statusCode.toString(),
+      status_code: res.statusCode,
     });
 
     requestDurationHistogram.observe(
       {
-        route: req.originalUrl,
+        route,
         method: req.method,
         status_code: res.statusCode,
       },
       duration
     );
 
-    activeRequestsGauge.dec();
+    activeRequestsGauge.dec({
+      route,
+      method: req.method,
+    });
   });
 
   next();
