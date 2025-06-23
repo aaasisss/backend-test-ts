@@ -4,4 +4,4 @@ global:
 scrape_configs:
   - job_name: "backend-server-metrics"
     static_configs:
-      - targets: ["backend-server:3001"]
+      - targets: ["backend-server:3000"]
