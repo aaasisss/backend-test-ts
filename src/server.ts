@@ -6,6 +6,7 @@ import { loggerMiddleware } from "./middlewares/loggerMiddleware";
 import { requestIdMiddleware } from "./middlewares/requestIdMiddleware";
 import promClient from "prom-client";
 import metricsMiddleware from "./middlewares/metricsMiddleware";
+import rateLimiterMiddleware from "./middlewares/rateLimiterMiddleware";
 
 const app = express();
 
@@ -47,6 +48,10 @@ app.get("/cpu", (req, res) => {
     Math.random();
   }
   res.send("Hello World");
+});
+
+app.get("/protected-route", rateLimiterMiddleware, (_, res) => {
+  res.status(200).send("Hello from protected-route!");
 });
 
 app.get("/metrics", async (req, res) => {
