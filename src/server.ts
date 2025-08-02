@@ -6,7 +6,7 @@ import { loggerMiddleware } from "./middlewares/loggerMiddleware";
 import { requestIdMiddleware } from "./middlewares/requestIdMiddleware";
 import promClient from "prom-client";
 import metricsMiddleware from "./middlewares/metricsMiddleware";
-import rateLimiterMiddleware from "./middlewares/rateLimiterMiddleware";
+import { rateLimiterMiddleware } from "./middlewares/rateLimiterMiddleware";
 
 const app = express();
 

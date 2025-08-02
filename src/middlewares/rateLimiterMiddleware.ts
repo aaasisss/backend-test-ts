@@ -1,12 +1,42 @@
+import config from "../config";
 import { rateLimit } from "express-rate-limit";
+import logger from "../logger";
+import { RedisStore } from "rate-limit-redis";
+import { createClient } from "redis";
 
-const rateLimiterMiddleware = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
-  standardHeaders: "draft-8", // draft-6: `RateLimit-*` headers; draft-7 & draft-8: combined `RateLimit` header
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers.
-  ipv6Subnet: 56, // Set to 60 or 64 to be less aggressive, or 52 or 48 to be more aggressive
-  // store: ... , // Redis, Memcached, etc. See below.
+const redisClient = createClient({
+  url: "redis://localhost:6379/",
+});
+
+let isErrorConnectingToRedis = false;
+
+redisClient.on("connect", () => {
+  logger.info("Connected to Redis");
+});
+
+redisClient.on("error", (err) => {
+  console.error("Redis Client Error", err);
+  isErrorConnectingToRedis = true;
+});
+
+redisClient.connect().catch((err) => {
+  console.error("Failed to connect to Redis:", err);
+  isErrorConnectingToRedis = true;
+});
+
+export const rateLimiterMiddleware = rateLimit({
+  windowMs: config.RATE_LIMIT_WINDOW_MS,
+  limit: config.RATE_LIMIT_MAX_REQUESTS || 100,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  ipv6Subnet: 56,
+  store:
+    config.ENVIRONMENT !== "prod"
+      ? new RedisStore({
+          sendCommand: (...args: string[]) => redisClient.sendCommand(args),
+        })
+      : undefined,
+  skipFailedRequests: true,
 });
 
 export default rateLimiterMiddleware;
